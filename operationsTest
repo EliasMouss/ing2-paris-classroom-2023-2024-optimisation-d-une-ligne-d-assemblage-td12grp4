@@ -1,0 +1,69 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+typedef struct {
+    int operationId;
+    float executionTime;
+} Operation;
+
+// Déclaration de fonctions
+Operation* readOperations(FILE *file, int *size);
+void printOperations(const Operation *operations, int size);
+void freeOperations(Operation *operations);
+
+int main() {
+    FILE *file = fopen("operations.txt", "r");
+    if (file == NULL) {
+        perror("Erreur lors de l'ouverture du fichier");
+        return 1;
+    }
+
+    int size;
+    Operation *operations = readOperations(file, &size);
+    if (operations == NULL) {
+        fclose(file);
+        return 1;
+    }
+
+    printOperations(operations, size);
+    freeOperations(operations);
+
+    fclose(file);
+    return 0;
+}
+
+Operation* readOperations(FILE *file, int *size) {
+    int capacity = 10;
+    *size = 0;
+    Operation *operations = malloc(capacity * sizeof(Operation));
+    if (operations == NULL) {
+        perror("Erreur d'allocation de mémoire");
+        return NULL;
+    }
+
+    Operation op;
+    while (fscanf(file, "%d %f", &op.operationId, &op.executionTime) == 2) {
+        if (*size >= capacity) {
+            capacity *= 2;
+            operations = realloc(operations, capacity * sizeof(Operation));
+            if (operations == NULL) {
+                perror("Erreur de reallocation de mémoire");
+                return NULL;
+            }
+        }
+        operations[*size] = op;
+        (*size)++;
+    }
+
+    return operations;
+}
+
+void printOperations(const Operation *operations, int size) {
+    for (int i = 0; i < size; i++) {
+        printf("Operation %d: Temps d'execution = %.2f\n", operations[i].operationId, operations[i].executionTime);
+    }
+}
+
+void freeOperations(Operation *operations) {
+    free(operations);
+}
